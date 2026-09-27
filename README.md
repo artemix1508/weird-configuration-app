@@ -1,0 +1,1 @@
+# weird-configuration-app
