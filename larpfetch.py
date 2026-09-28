@@ -3,6 +3,16 @@ import json #for reading logo ascii arts
 import subprocess #to run commands, needed for detection of software and hardware
 import os
 import rich #to color print statemets
+from rich.columns import Columns
+from rich.text import Text
+import getpass
+import socket
+
+username = getpass.getuser()
+
+hostname = socket.gethostname()
+
+user_host_format = f"{username}@{hostname}"
 
 def get_gpu_info():
     result = subprocess.run(["lspci"], capture_output=True, text=True)
@@ -23,6 +33,13 @@ def get_gpu_info():
                 gpus.append({'Vendor': 'Intel', 'Model': model})
             pass
     return gpus
+
+def get_de():
+    desktop = os.environ.get("XDG_CURRENT_DESKTOP") or os.environ.get("DESKTOP_SESSION")
+
+    if desktop:
+        return desktop
+    return "Unknown"
 
 def get_cpu_info():
     cpu_result = subprocess.run(["lscpu"], capture_output=True, text=True)
@@ -61,6 +78,7 @@ distro_info = get_distro_info()
 distro_name = distro_info.get('ID', '').strip('"')
 gpu_info = get_gpu_info()
 cpu_info = get_cpu_info()
+desktop_environment = get_de()
 
 logo_data = logos.get(distro_name, "")
 if isinstance(logo_data, list):
@@ -70,19 +88,31 @@ else:
 
 subprocess.run(["clear"])
 
-distro_print = (f"Distribution: {distro_name.capitalize()}")
-rich.print(f"[bold red]Distribution:[/bold red] [green]{distro_name.capitalize()}[/green]")
-rich.print(f"[purple]{"-"* (len(distro_print))}[/purple]")
+info_text = Text()
 
+info_text.append(f"{username}", style="bold cyan")
+info_text.append("@", style="bold white")
+info_text.append(f"{hostname}\n", style="bold cyan")
 
-cpu_print = (f"CPU: {cpu_info}")
-rich.print(f"[bold red]CPU:[/bold red] [green]{cpu_info}[/green]")
-rich.print(f"[purple]{"-"* (len(cpu_print))}[/purple]")
+header_length = len(user_host_format)
+info_text.append(f"{'-' * header_length}\n")
+
+distro_display = distro_name.capitalize()
+info_text.append("Distribution: ", style="bold cyan")
+info_text.append(f"{distro_display}\n")
+
+info_text.append("Desktop environment: ", style="bold cyan")
+info_text.append(f"{desktop_environment}\n")
+
+info_text.append("CPU: ", style="bold cyan")
+info_text.append(f"{cpu_info}\n")
 
 for i, gpu in enumerate(gpu_info, start=1):
-    gpus_print = f"GPU{i}: {gpu['Vendor']}, {gpu['Model']}"
-    rich.print(f"[bold red]GPU{i}:[/bold red] [green]{gpu['Vendor']}[/green], [green]{gpu['Model']}[/green]")
-    rich.print(f"[purple]{"-"* (len(gpus_print))}[/purple]")
+    info_text.append(f"GPU{i}: ", style="bold cyan")
+    info_text.append(f"{gpu['Vendor']}")
+    info_text.append(", ")
+    info_text.append(f"{gpu['Model']}\n")
 
-if logo_str:
-    rich.print(f"[bold cyan]{logo_str}[/bold cyan]\n")
+logo_text = Text(logo_str, style="bold cyan")
+
+rich.print(Columns([logo_text, info_text], padding=4))
