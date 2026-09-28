@@ -76,6 +76,7 @@ with open(logos_path) as f:
 
 distro_info = get_distro_info()
 distro_name = distro_info.get('ID', '').strip('"')
+pretty_distro_name = distro_info.get('PRETTY_NAME', '').strip('"')
 gpu_info = get_gpu_info()
 cpu_info = get_cpu_info()
 desktop_environment = get_de()
@@ -97,7 +98,7 @@ info_text.append(f"{hostname}\n", style="bold cyan")
 header_length = len(user_host_format)
 info_text.append(f"{'-' * header_length}\n")
 
-distro_display = distro_name.capitalize()
+distro_display = pretty_distro_name
 info_text.append("Distribution: ", style="bold cyan")
 info_text.append(f"{distro_display}\n")
 
